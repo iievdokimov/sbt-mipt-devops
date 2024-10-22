@@ -1,25 +1,38 @@
 #!/bin/bash
 
 ACTION=$1
-
-SCRIPT_NAME=$(basename "$0")
-
 REPORT_DIR="./reports"
 mkdir -p $REPORT_DIR
 
 monitor() {
-    while true; do
-        TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-        DATE=$(date +"%Y-%m-%d")
-        REPORT_FILE="$REPORT_DIR/report_$TIMESTAMP_$DATE.csv"
+    current_date=$(date +"%Y-%m-%d")
+    timestamp=$(date +"%Y%m%d_%H%M%S")
+    REPORT_FILE="$REPORT_DIR/report_${timestamp}_${current_date}.csv"
 
-        # unix
-        df -i | awk 'NR==1{print $0; next} {print $0}' > "$REPORT_FILE"
-	
+
+    echo "Timestamp,Filesystem,Size,Used,Available,Use%,Mounted,Inodes,InodesUsed,InodesFree,InodesUse%" > "$REPORT_FILE"
+
+    while true; do
+        # check date-change
+        new_date=$(date +"%Y-%m-%d")
+        if [[ "$new_date" != "$current_date" ]]; then
+            timestamp=$(date +"%Y%m%d_%H%M%S")
+            REPORT_FILE="$REPORT_DIR/report_${timestamp}_${new_date}.csv"
+            echo "Timestamp,Filesystem,Size,Used,Available,Use%,Mounted,Inodes,InodesUsed,InodesFree,InodesUse%" > "$REPORT_FILE"
+            current_date=$new_date
+        fi
+
+        # write new strings to CSV
+        df -h --output=source,size,used,avail,pcent,target | tail -n +2 | while read line; do
+            inode_info=$(df -i --output=itotal,iused,ifree,ipcent | grep "$(echo $line | awk '{print $1}')")
+            timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+            echo "$timestamp,$line,$inode_info" >> "$REPORT_FILE"
+        done
 
         sleep 60
     done
 }
+
 
 start() {
     if [ -f "$REPORT_DIR/monitor.pid" ]; then
@@ -33,17 +46,17 @@ start() {
         fi
     fi
 
-    # Если процесс не запущен, то запускаем его
     monitor &
     PID=$!
     echo "Процесс запущен с PID: $PID"
     echo $PID > "$REPORT_DIR/monitor.pid"
 }
 
+# Функция для остановки процесса
 stop() {
     if [ -f "$REPORT_DIR/monitor.pid" ]; then
         PID=$(cat "$REPORT_DIR/monitor.pid")
-        if ps -p $PID > /dev/null; then
+        if ps -p $PID > /dev/null 2>&1; then
             kill $PID
             rm "$REPORT_DIR/monitor.pid"
             echo "Процесс $PID остановлен."
@@ -55,10 +68,11 @@ stop() {
     fi
 }
 
+
 status() {
     if [ -f "$REPORT_DIR/monitor.pid" ]; then
         PID=$(cat "$REPORT_DIR/monitor.pid")
-        if ps -p $PID > /dev/null; then
+        if ps -p $PID > /dev/null 2>&1; then
             echo "Процесс запущен с PID: $PID."
         else
             echo "Процесс не запущен."
@@ -68,7 +82,7 @@ status() {
     fi
 }
 
-# rules
+
 case "$ACTION" in
     START)
         start
