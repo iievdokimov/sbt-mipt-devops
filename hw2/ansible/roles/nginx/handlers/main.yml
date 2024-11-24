@@ -1,0 +1,6 @@
+---
+- name: Перезапустить Nginx
+  service:
+    name: nginx
+    state: restarted
+  become: true

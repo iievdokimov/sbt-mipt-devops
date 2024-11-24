@@ -1,0 +1,29 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: Установить Nginx
+      apk:
+        name: nginx
+        state: present
+
+    - name: Проверка, установлен ли Nginx
+      command: nginx -v
+      register: nginx_version
+      failed_when: nginx_version.rc != 0  
+
+    - name: Запустить Nginx
+      command: rc-service nginx start
+      when: nginx_version.rc == 0 
+
+    - name: Включить Nginx при старте системы
+      command: rc-update add nginx default
+      when: nginx_version.rc == 0
+    - name: Клонировать проект с GitHub
+      git:
+        repo: 'https://github.com/iievdokimov/ALearn.git'
+        dest: /var/www/app
+        version: master
+
+    - name: Установить зависимости для приложения
+      command: bash /var/www/app/build.sh

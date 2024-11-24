@@ -1,0 +1,19 @@
+version: '3'
+services:
+  ansible:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./ansible:/ansible
+    command: ansible-playbook -i /ansible/inventories/servers.yml /ansible/install_nginx.yml
+
+  app:
+    image: python:3.12
+    volumes:
+      - /var/www/app:/app  # Общий volume для приложения
+    working_dir: /app
+    command: /app/start_app.sh
+    ports:
+      - "80:80"

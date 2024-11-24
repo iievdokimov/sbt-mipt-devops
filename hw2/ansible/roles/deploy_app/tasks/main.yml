@@ -1,0 +1,26 @@
+---
+- name: Клонирование репозитория с приложением
+  git:
+    repo: 'https://github.com/iievdokimov/ALearn.git'
+    dest: /var/www/app
+    version: "master"
+    force: yes
+  become: true
+
+- name: Установка необходимых компонентов
+  shell: |
+    apt-get update
+    apt-get install -y python3-pip
+    pip3 install -r /var/www/app/requirements.txt
+  become: true
+
+- name: Копирование скрипта для запуска
+  copy:
+    src: start_app.sh
+    dest: /usr/local/bin/start_app.sh
+    mode: '0755'
+  become: true
+
+- name: Запуск приложения
+  shell: /usr/local/bin/start_app.sh
+  become: true

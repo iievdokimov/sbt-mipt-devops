@@ -1,0 +1,19 @@
+---
+- hosts: local
+  tasks:
+    - name: Установить git
+      apt:
+        name: git
+        state: present
+
+    - name: Клонировать проект из репозитория
+      git:
+        repo: 'https://github.com/iievdokimov/ALearn.git'
+        dest: /app
+
+    - name: Установить зависимости Flask
+      pip:
+        requirements: /app/requirements.txt
+
+    - name: Запустить Flask-приложение
+      shell: bash /app/start_app.sh
