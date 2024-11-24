@@ -35,6 +35,7 @@
 	<properties>
 		<java.version>17</java.version>
 		<kotlin.version>1.9.25</kotlin.version>
+		<allure.version>2.15.2</allure.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -80,6 +81,18 @@
 		<sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
 		<testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
 		<plugins>
+			<plugin>
+				<groupId>io.qameta.allure</groupId>
+				<artifactId>allure-maven</artifactId>
+				<executions>
+					<execution>
+						<goals>
+<!--							<goal>serve</goal> &lt;!&ndash; если вы хотите запускать сервер для отчетов в режиме реального времени &ndash;&gt;-->
+							<goal>report</goal> <!-- если вы хотите просто генерировать отчет -->
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
             <plugin>
                 <groupId>org.sonarsource.scanner.maven</groupId>
                 <artifactId>sonar-maven-plugin</artifactId>
